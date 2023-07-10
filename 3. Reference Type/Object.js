@@ -3,7 +3,7 @@
  */
 
 // ! 创建 Object 实例
-// * new 和 Object() 创建
+// * new 和 Object() 创建 —— 一般不会使用
 let person1 = new Object();
 person1.name = "Nicholas";
 person1.age = 29;
@@ -31,7 +31,7 @@ function displayInfo(args) {
     output += "Age: " + args.age + "\n";
   }
 
-  alert(output);
+  console.log(output);
 }
 
 displayInfo({
@@ -42,3 +42,7 @@ displayInfo({
 displayInfo({
   name: "Greg",
 });
+
+// * 属性名也是可以用中括号语法访问它们的，它的优势是可以通过变量访问属性，如下
+let propertyName = "name";
+console.log(person1[propertyName]);
