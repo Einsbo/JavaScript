@@ -87,5 +87,51 @@ for (const pair of m7[Symbol.iterator]()) {
   console.log(pair); // 与上相同
 }
 
-// 可以直接对映射实例使用扩展操作，把映射转换为数组
+// ? 可以直接对映射实例使用扩展操作，把映射转换为数组
 console.log([...m7]); // [['key1', 'val1'], ['key2', 'val2'], ['key3', 'val3']]
+
+/* 如果不使用迭代器，而使用回调，则可以调用映射的 forEach(callback, opt_thisArg) 方法并传入回调，依次迭代每个键值
+  对。传入的回调接收可选的第二个参数，这个参数用于重写回调内部 this 的值： */
+const m8 = new Map([
+  ["key1", "val1"],
+  ["key2", "val2"],
+  ["key3", "val3"]
+]);
+m8.forEach((val, key) => console.log(`${key} -> ${val}`)); // key1 -> val1, key2 -> val2, key3 -> val3
+
+// keys() 和 values() 分别返回以插入顺序生成的健和值的迭代器
+for (const key of m8.keys()) {
+  console.log(key); // key1, key2, key3
+}
+
+for (const key of m8.values()) {
+  console.log(key); // val1, val2, val3
+}
+
+// ! 健和值在迭代器遍历时是可以修改的，但映射内部的引用则无法修改。当然这并不妨碍修改作为健和值的对象内部的属性
+const m9 = new Map([
+  ["key1", "val1"]
+]);
+
+for (let key of m9.keys()) {
+  key = "newKey"; // 作为健的字符串原始值是不能修改的
+  console.log(key, m9.get("key1"), m9.get("newKey")); // newKey val1 undefined
+}
+
+const keyObj = {id: 1};
+
+const m10 = new Map([
+  [keyObj, "val1"]
+]);
+
+for (let key of m10.keys()) { 
+  key.id = "newKey"; // 修改作为健的对象的属性，但对象在映射内部仍然引用相同的值
+  console.log(key, m10.get(keyObj)); // {id: "newKey"} val1
+}
+console.log(keyObj); // {id: "newKey"}
+
+// ! Map 和 Object 之间的选择
+// * 给定固定大小的内存，Map 大约可以比 Object 多存储 50% 的健值对
+// * 如果代码涉及大量插入操作，Map 的性能更佳
+// * 如果代码涉及大量查找操作，某些情况下选择 Object 更好一些（浏览器引擎会对特殊 Object 进行优化）
+// * 如果代码涉及大量删除操作，毫无疑问选择 Map，因为 Map 的 delete() 比插入和查找更快
