@@ -1,8 +1,14 @@
 // ! 函数声明与函数表达式
-if (true) {
-  // JS 引擎在任何代码执行之前会先读取函数声明，并在执行上下文中生成函数定义。而函数表达式必须等到代码执行到它那一行才会在执行上下文中生成函数定义
+if (!true) {
+  /* JS 引擎在任何代码执行之前会先读取函数声明，并在执行上下文中生成函数定义。而函数表达式必须等到代码执行到它那一行才
+    会在执行上下文中生成函数定义。除了函数什么时候有真正区别之外，这两种语法等价 */
   console.log(sum1(10, 10)); // 20, 没问题
-  function sum1(num1, num2) {
+  function sum1(num1, num2) { // * 会执行函数声明提升
+    return num1 + num2;
+  }
+
+  // console.log(sum2(10, 10)); // ReferenceError: Cannot access 'sum2' before initialization
+  let sum2 = function(num1, num2) {
     return num1 + num2;
   }
 }
@@ -60,14 +66,16 @@ if (!true) {
 
 // ! 参数
 // * ES 函数的参数只是为了方便写出来的，并不是必须写出来的，ES 根本不存在验证命名参数的机制
-/* ES 函数的参数与其他大多数语言不同，函数及不关心传入的参数个数，也不关心这些参数的类型。之所以会这样，主要是因为 ES 函数的参数在内部表现为一个数组，函数调用时总会接收一个数组，但函数并不关心这个数组中有什么 */
+/* ES 函数的参数与其他大多数语言不同，函数及不关心传入的参数个数，也不关心这些参数的类型。之所以会这样，主要是因为 ES 
+  函数的参数在内部表现为一个数组，函数调用时总会接收一个数组，但函数并不关心这个数组中有什么 */
 if (!true) {
   function sayHi(name, message) {
     console.log("Hello " + name + ", " + message);
   }
   sayHi('Niher', 'Welcome')
 
-  /* arguments 对象是一个类数组对象（但不是 Array 的实例），要确定传进来多少个参数，可以访问 arguments.length。可以通过 arguments[0] 取得第一个参数值，因此把函数重写成不声明参数也可以 */
+  /* arguments 对象是一个类数组对象（但不是 Array 的实例），要确定传进来多少个参数，可以访问 arguments.length。
+    可以通过 arguments[0] 取得第一个参数值，因此把函数重写成不声明参数也可以 */
   function sayHi2() {
     console.log("Hello " + arguments[0] + ", " + arguments[1]);
   }
@@ -80,7 +88,8 @@ if (!true) {
   howManyArgs(12); // 1
   howManyArgs("String", []); // 2
 
-  /* arguments 对象的值始终会与对应的命名参数同步，它们在内存中是分开的，但是仍会保持同步。同时 arguments 的长度跟据传入的参数来确定，无法在函数内部修改 */
+  /* arguments 对象的值始终会与对应的命名参数同步，它们在内存中是分开的，但是仍会保持同步。同时 arguments 的长度跟
+    据传入的参数来确定，无法在函数内部修改 */
   function doAdd(num1, num2) {
     arguments[1] = 10;
     arguments[3] = 12;
@@ -100,7 +109,8 @@ if (!true) {
 }
 
 // ? ES 函数没有重载
-/* 其它语言（比如 Java）中，一个函数可以有两个定义，只要签名（接收参数的类型和数量）不同就行，但是 ES 函数没有签名，因为参数是由数组表示的，没有签名自然没有重载 */
+/* 其它语言（比如 Java）中，一个函数可以有两个定义，只要签名（接收参数的类型和数量）不同就行，但是 ES 函数没有签名，
+  因为参数是由数组表示的，没有签名自然没有重载 */
 if (!true) {
   function addSomeNumber(num) {
     return num + 100;
@@ -164,4 +174,42 @@ if (!true) {
   }
 
   /* 暂时性死区规则：前面定义的参数不能引用后面定义的 */
+}
+
+// ! 参数扩展与收集
+if (true) {
+  let values = [1, 2, 3, 4];
+  // 假设有如下函数定义，它会将所有传入的参数累加起来
+  function getSum() {
+    let sum = 0;
+    for (let i = 0; i < arguments.length; i++) {
+      sum += arguments[i];
+    }
+    return sum;
+  }
+
+  // * 在 ES6 中，对可迭代对象应用扩展操作服可以将其作为一个参数传入，并将可迭代对象拆分成一个一个值单独传入
+  console.log(getSum(...values)); // 10
+  console.log(getSum(...values, ...[5, 6, 7])); // 28
+
+  // 对函数中的 arguments 而言，它并不知道扩展操作服的存在，它是按照调用参数时传入的参数接收每一个值
+  function countArguments() {
+    console.log(arguments.length, arguments[0]);
+  }
+  countArguments(-1, ...values); // 5, -1
+  countArguments(...values, 5); // 5, 1
+
+  // * 函数定义时可以使用扩展操作符把不同长度的独立参数组合成为一个数组，收集参数的结果会得到一个 Array 实例
+  function getSum(...values) {
+    // 顺序累加 values 中的值，初始值的总和为0
+    return values.reduce((x, y) => x + y, 0);
+  }
+  console.log(getSum(1, 2, 3)); // 6
+
+  /* 收集参数的前面如果还有命名参数，则只会收集其余的参数，如果没有则会得到空数组，因为收集参数的结果可变，所以只能把
+    它作为最后一个参数 */
+  // function getProduct(...values, lastValue) {} // 不可以
+  function ignoreFirst(firstValue, ...values) { // 可以
+    console.log(values); 
+  }
 }
