@@ -8,8 +8,34 @@ if (!true) {
   }
 
   // console.log(sum2(10, 10)); // ReferenceError: Cannot access 'sum2' before initialization
-  let sum2 = function(num1, num2) {
+  let sum2 = function(num1, num2) { // 匿名函数
     return num1 + num2;
+  }
+
+  // * 理解函数声明与函数表达式之间的区别关键是理解提升
+  let condition = true;
+  /* 不能这样写，这种写法不是有效的 ES 写法，JS 引擎会尝试将其纠正为适当的声明，但是浏览器纠正这个问题的方式不一致，
+    多数浏览器会忽略 condition 直接返回第二个声明，Firefox 会在 condition 为 true 的时候返回第一个声明 */
+  if (condition) { 
+    function sayHi() { 
+      console.log("Hi");
+    }
+  } else {
+    function SayHi() {
+      console.log("Yo");
+    }
+  }
+
+  // 把上面的函数换成函数表达式就没问题了
+  let sayHi;
+  if (condition) {
+    sayHi = function() {
+      console.log("Hi");
+    }
+  } else {
+    sayHi = function() {
+      console.log("Yo");
+    }
   }
 }
 
@@ -177,7 +203,7 @@ if (!true) {
 }
 
 // ! 参数扩展与收集
-if (true) {
+if (!true) {
   let values = [1, 2, 3, 4];
   // 假设有如下函数定义，它会将所有传入的参数累加起来
   function getSum() {
@@ -213,3 +239,121 @@ if (true) {
     console.log(values); 
   }
 }
+
+// ! 函数作为值
+/* ES 函数名就是变量，所以函数可以用在任何可以使用变量的地方，这意味着可以在一个函数中返回另一个函数，也可以把函数作为
+  参数传递给另一个函数 */
+if (!true) {
+  // * 函数作为另一个函数的参数
+  function callSomeFunction(someFunction, someArgument) {
+    return someFunction(someArgument);
+  }
+
+  function add10(num) {
+    return num + 10;
+  }
+
+  let result = callSomeFunction(add10, 10); // 必须将函数本身传入，而不是函数的调用结果，所以这里时 add10
+  console.log(result); // 20
+
+  function getGreeting(name) {
+    return "Hello, " + name;
+  }
+
+  let result2 = callSomeFunction(getGreeting, "Nicholas");
+  console.log(result2); // 'Hello, Nicholas'
+
+  // * 函数返回另一个函数
+  function createComparisonFunction(propertyName) {
+    return function(object1, object2) { // 返回函数，对一个包含对象的数组按照任意对象属性进行排序
+      let value1 = object1[propertyName], value2 = object2[propertyName];
+      if (value1 < value2) {
+        return -1;
+      } else if (value1 > value2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  let data = [
+    {name: "Zachary", age: 28},
+    {name: "Nicholas", age: 29}
+  ];
+
+  data.sort(createComparisonFunction("name"));
+  console.log(data); // [{name: 'Nicholas', age: 29}, {name: 'Zachary', age: 28}]
+}
+
+// ! 函数属性与方法 —— ES 函数是对象，因此有属性和方法
+/* 每个函数都有两个属性：length 和 prototype */
+if (!true) {
+  function sayName(name) {
+    console.log(name);
+  }
+  function sum(num1, num2) {
+    return num1 + num2;
+  }
+  function sayHi() {
+    console.log("hi");
+  }
+
+  // * length 保存函数定义的命名参数的个数
+  console.log(sayName.length, sum.length, sayHi.length); // 1, 2, 0
+
+  // * prototype 是保存引用类型所有实例方法的地方，这意味着 toString(), valueOf() 等方法都在 prototype 上
+
+  // * apply(), call() —— 以指定的 this 来调用函数，会设置调用函数时函数体内 this 对象的值
+  /* 使用 apply() 和 call() 完全取决于怎么给要调用的函数传参更方便，如果想直接传 arguments 对象或一个数组，则使用
+    apply()，否则用 call() */
+  // apply() 的参数是 this 和一个参数数组（Array 实例或 arguments）
+  function callSum1(num1, num2) {
+    return sum.apply(this, arguments); // 传入 arguments
+  }
+  function callSum2(num1, num2) {
+    return sum.apply(this, [num1, num2]); // 传入数组
+  }
+  console.log(callSum1(10, 10), callSum2(10, 10)); // 20, 20 这里的 this 是 window
+  /* 严格模式下调用函数时如果没有指定上下文对象，则 this 不会指向 window，除非使用 apply() 或 call() 把函数指定
+    给一个对象，否则 this 的值会变成 undefined */
+  // 通过 call() 向函数传参时，第一个参数是 this，后面的参数要一个一个的列出来
+  function callSum(num1, num2) {
+    return sum.call(this, num1, num2);
+  }
+  console.log(callSum(10, 10)); // 20
+
+  // * apply(), call() 强大的地方是控制函数调用上下文，即函数体内 this 的能力
+  window.color = "red";
+  let o = {
+    color: "blue"
+  };
+  function sayColor() {
+    console.log(this.color);
+  }
+  sayColor(); // red
+  sayColor.call(this); // red
+  sayColor.call(window); // red
+  sayColor.call(o); // blue
+
+  // * bind() —— 创建一个新的函数实例，其 this 会被绑定到传给 bind() 的对象
+  let objectSayColor = sayColor.bind(o);
+  objectSayColor(); // blue
+}
+
+// ! 立即调用的函数表达式
+if (true) {
+  /* 立即调用的函数表达式类似函数声明，但由于被包含在括号中所以会被解释为函数表达式 */
+  (function() {
+    // 块级作用域
+    console.log('new');
+  })();
+}
+
+// TODO 私有变量 10.16
+
+// TODO 静态私有变量 10.16.1
+
+// TODO 模块模式
+
+// TODO 模块增强模式
