@@ -350,7 +350,30 @@ if (true) {
   })();
 }
 
-// TODO 私有变量 10.16
+// ! 私有变量 —— JS 没有私有成员的概念，所有对象属性都是公有的。不过有私有变量的概念
+/* 任何定义在函数或块中的变量都可以认为是私有的，因为在这个函数或块的外部无法访问其中的变量，私有变量包括函数参数、局部
+  变量，以及函数内部定义的其他函数。如果函数创建了一个闭包，则这个闭包能通过其作用域链访问其外部函数的变量。基于这一点就
+  能够创建访问私有变量的方法 */
+function add(num1, num2) {
+  let sum = num1 + num2; // add() 拥有三个私有变量：num1, num2, sum
+  return sum;
+}
+
+// * 特权方法 —— 能够访问函数私有变量（及私有函数）的公有方法
+function MyObject() { // 在构造函数实现
+  // 私有变量和私有函数
+  let privateVariable = 10; 
+
+  function privateFunction() {
+    return false;
+  }
+
+  // 特权方法，实际上是一个闭包，在创建 MyObject 的实例后，没有办法直接访问私有变量/方法，只能通过该函数访问
+  this.publicMethod = function() {
+    privateVariable++;
+    return privateFunction();
+  }
+}
 
 // TODO 静态私有变量 10.16.1
 
