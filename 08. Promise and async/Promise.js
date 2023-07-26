@@ -70,3 +70,34 @@ if (!true) {
 }
 
 // ! Promise 的实例方法
+// * Promise.prototype.then() —— 接受最多两个参数：onResolved 和 onRejected
+/* 两个参数都是可选的，如果提供的话，则会在 Promise 分别进入 fulfilled 和 rejected 状态时执行，因为 Promise 只
+  能转换为最终状态一次，所以这两个操作一定是互斥的 */
+function onResolved(id) {
+  setTimeout(console.log, 0, id, "resolved");
+}
+function onRejected(id) {
+  setTimeout(console.log, 0, id, "rejected");
+}
+if (true) {
+  let p1 = new Promise((resolve, reject) => setTimeout(resolve, 3000));
+  let p2 = new Promise((resolve, reject) => setTimeout(reject, 3000));
+
+  p1.then(() => onResolved("p1"), () => onRejected("p1"));
+  p2.then(() => onResolved("p2"), () => onRejected("p2"));
+
+  // (3 秒后) p1 resolved, p2 rejected
+  /* 如果只提供 obRejected 参数，那就要在 onResolved 参数的位置上传入 undefined，这样有助于避免在内存中创建多余
+    的对象，对期待函数的类型系统也是一个交代
+        p2.then(null, () => onRejected("p2")); // 不传 onResolved 处理程序的规范写法
+  */
+
+  // * Promise.prototype.then() 返回一个新的 Promise 实例
+  /* 这个新 Promise 实例基于 onResovled 处理程序的返回值构建，换句话说，它会通过 Promise.resolve() 来生成新的
+    Promise */
+  let p3 = new Promise(() => {}); 
+  let p4 = p1.then();
+  setTimeout(console.log, 0, p3); // Promise {<pending>}
+  setTimeout(console.log, 0, p4); // Promise {<pending>}
+  setTimeout(console.log, 0, p3 === p4); // false
+}
