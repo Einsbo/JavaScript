@@ -27,3 +27,21 @@ const observer = new IntersectionObserver(callback);
 images.forEach(image => {
   observer.observe(image); // 观察每个 image 节点
 })
+
+
+// ! 图片预加载
+/**
+ * 1. 创建一个 Image 对象
+ * 2. 设置 src 属性
+ * 3. 监听 load 事件
+ * 4. 监听 error 事件
+ * 5. 将 Image 对象插入到 DOM 中
+ */
+const image = new Image();
+image.src = "1.gif";
+image.onload = () => {
+  document.body.appendChild(image);
+}
+image.onerror = () => {
+  console.log("图片加载失败");
+}
